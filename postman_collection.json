@@ -1,0 +1,52 @@
+{
+	"info": {
+		"_postman_id": "6d841dc6-9691-4a15-ba93-ff4cd69ffb40",
+		"name": "My app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26241185"
+	},
+	"item": [
+		{
+			"name": "My requests",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/feed/1?search=n1&filter=note&page=1&limit=10&offset=0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"feed",
+						"1"
+					],
+					"query": [
+						{
+							"key": "search",
+							"value": "n1"
+						},
+						{
+							"key": "filter",
+							"value": "note"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "offset",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
