@@ -26,6 +26,7 @@ class Achievement(models.Model):
     title = models.CharField(max_length=100)
     reasons = models.TextField()
     icon = models.ImageField(blank=True, upload_to='images/achievements/%Y/%m/%d')
+    owners = models.ManyToManyField(User, through='UsersAchievements')
 
     def __str__(self):
         return f"{self.title}"
