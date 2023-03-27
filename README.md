@@ -6,5 +6,5 @@
 4. Сделайте миграции `poetry run python3 manage.py migrate`
 5. загрузите fixtures `poetry run python3 manage.py loaddata fixtures/data_dump.json`
 6. Запустите тесты `poetry run python3 manage.py test main.tests`
-7. Запустите приложение `poetrt run python3 manage.py runserver`
+7. Запустите приложение `poetry run python3 manage.py runserver`
 8. В программе Postman импортируйте `postman_collection.json` и сделайте запросы
