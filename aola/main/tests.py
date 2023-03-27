@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from .constants import FilterKeyWords
 from .models import Achievement, Ad, UsersAchievements, Note, User
 
 
@@ -85,8 +86,8 @@ class TestFeedAPIView(APITestCase):
         Note.objects.create(title='tn1', body='b', user=user1)
         url = self.URL.format(id=user1.pk)
 
-        response_note = self.client.get(f"{url}?filter=note")
-        response_ach = self.client.get(f"{url}?filter=achievement")
+        response_note = self.client.get(f"{url}?filter={FilterKeyWords.NOTE}")
+        response_ach = self.client.get(f"{url}?filter={FilterKeyWords.ACHIEVEMENT}")
 
         self.assertEqual(status.HTTP_200_OK, response_note.status_code)
         self.assertEqual(status.HTTP_200_OK, response_ach.status_code)
