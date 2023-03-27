@@ -42,6 +42,7 @@ class UsersAchievements(models.Model):
     class Meta:
         ordering = ['-received_at']
 
+
 class Ad(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
