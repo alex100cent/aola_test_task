@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User, UsersAchievements, Achievement, Note, Ad
+from ..models import User, UsersAchievements, Achievement, Note, Ad
 
 
 class UserSerializer(serializers.ModelSerializer):

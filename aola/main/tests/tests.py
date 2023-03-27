@@ -1,8 +1,8 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .constants import FilterKeyWords
-from .models import Achievement, Ad, UsersAchievements, Note, User
+from ..constants import FilterKeyWords
+from ..models import Achievement, Ad, UsersAchievements, Note, User
 
 
 class TestFeedAPIView(APITestCase):
