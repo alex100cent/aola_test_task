@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..models import User, UsersAchievements, Achievement, Note, Ad
+from ..models import User, UsersEvents, Achievement, Note, Ad
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UsersAchievementsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UsersAchievements
+        model = UsersEvents
         fields = '__all__'
 
 
