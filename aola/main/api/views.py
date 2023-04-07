@@ -1,38 +1,32 @@
-from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
 
 from .paginations import FeedPaginator
-from .serializers import AchievementSerializer, NoteSerializer, AdSerializer
-from ..constants import FilterKeyWords
-from ..models import Achievement, Note, Ad
+from .serializers import AdSerializer, UsersPostsSerializer
+from ..models import Ad, User
 
 
 class FeedAPIView(GenericAPIView):
     pagination_class = FeedPaginator
-    filter_backends = (SearchFilter,)
-    search_fields = ('title',)
 
     def get(self, request, user_id):
-        ad = Ad.objects.all()
-        result_dict = {
-            'ad': AdSerializer(ad, many=True).data
-        }
+        user = get_object_or_404(User, pk=user_id)
+        ad = Ad.objects.all()[:1]
+        posts = AdSerializer(ad, many=True).data
+
+        user_posts = user.posts.all()
 
         filter_param = self.request.query_params.get('filter')
-        if not filter_param or (filter_param == FilterKeyWords.NOTE):
-            notes = Note.objects.filter(user__pk=user_id)
-            notes = self.filter_queryset(notes)
-            result_dict['notes'] = NoteSerializer(notes, many=True).data
-        if not filter_param or (filter_param == FilterKeyWords.ACHIEVEMENT):
-            achievements = Achievement.objects.filter(usersachievements__user__pk=user_id)
-            achievements = self.filter_queryset(achievements)
-            result_dict['achievements'] = AchievementSerializer(achievements, many=True).data
+        if filter_param:
+            user_posts = [p for p in user_posts if p.post_content_type.model == filter_param]
 
-        result_data = result_dict.pop('ad')
-        for key in result_dict:
-            result_data += result_dict[key]
+        search_param = self.request.query_params.get('search')
+        if search_param:
+            user_posts = [p for p in user_posts if p.post.title == search_param]
 
-        result_data = self.paginate_queryset(result_data)
+        # user_posts = [p.post for p in user_posts]
+        user_posts = UsersPostsSerializer(user_posts, many=True).data
+        posts = posts + user_posts
+        posts = self.paginate_queryset(posts)
 
-        return Response(result_data)
+        return Response(posts)

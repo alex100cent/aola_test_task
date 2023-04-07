@@ -1,6 +1,6 @@
-from django.db import models
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
 
 class User(models.Model):
@@ -10,21 +10,29 @@ class User(models.Model):
     def __str__(self):
         return f"{self.name} {self.surname}"
 
-    def add_event(self, event) -> 'UsersEvents':
-        event_content_type = ContentType.objects.get_for_model(event)
+    def add_post(self, post) -> 'UsersPosts':
+        post_content_type = ContentType.objects.get_for_model(post)
 
-        return UsersEvents.objects.create(
+        return UsersPosts.objects.create(
             user=self,
-            event_content_type=event_content_type,
-            event_object_id=event.pk,
+            post_content_type=post_content_type,
+            post_object_id=post.pk,
         )
 
 
-
-class Note(models.Model):
+class Feed(models.Model):
     title = models.CharField(max_length=100)
-    body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    post_record = GenericRelation(
+        'UsersPosts',
+        'post_object_id',
+        'post_content_type',
+        related_query_name='posts'
+    )
+
+
+class Note(Feed):
+    body = models.TextField()
 
     def __str__(self):
         return f"{self.title}"
@@ -33,23 +41,18 @@ class Note(models.Model):
         ordering = ['-created_at']
 
 
-class Achievement(models.Model):
-    title = models.CharField(max_length=100)
-    reasons = models.TextField()
+class Achievement(Feed):
+    body = models.TextField()
     icon = models.ImageField(blank=True, upload_to='images/achievements/%Y/%m/%d')
 
     def __str__(self):
         return f"{self.title}"
 
 
-
-
-class Ad(models.Model):
-    title = models.CharField(max_length=100)
-    description = models.TextField()
+class Ad(Feed):
+    body = models.TextField()
     image = models.ImageField(blank=True, upload_to='images/ad/%Y/%m/%d')
     url = models.URLField()
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def __str__(self):
         return f"{self.title}"
@@ -58,26 +61,26 @@ class Ad(models.Model):
         ordering = ['-created_at']
 
 
-class UsersEvents(models.Model):
+class UsersPosts(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     user = models.ForeignKey(
         User,
         models.CASCADE,
-        related_name='events'
+        related_name='posts'
     )
 
-    event_object_id = models.IntegerField()
-    event_content_type = models.ForeignKey(
+    post_object_id = models.IntegerField()
+    post_content_type = models.ForeignKey(
         ContentType,
         on_delete=models.PROTECT
     )
-    event = GenericForeignKey(
-        'event_content_type',
-        'event_object_id'
+    post = GenericForeignKey(
+        'post_content_type',
+        'post_object_id'
     )
 
     class Meta:
         ordering = ['-created_at']
 
-    def __str__(self):
-        return f"user: {self.user.name} event: {self.event.title}"
+    # def __str__(self):
+    #     return f"user: {self.user.name} event: {self.event.title}"

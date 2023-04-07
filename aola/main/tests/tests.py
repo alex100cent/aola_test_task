@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from ..constants import FilterKeyWords
-from ..models import Achievement, Ad, UsersEvents, Note, User
+from ..models import Achievement, Ad, UsersPosts, Note, User
 
 
 class TestFeedAPIView(APITestCase):
@@ -44,8 +44,8 @@ class TestFeedAPIView(APITestCase):
         user2 = User.objects.create(name='name2', surname='surname2')
         ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
         ach2 = Achievement.objects.create(title='ta2', reasons='tr2')
-        UsersEvents.objects.create(user=user1, achievement=ach1)
-        UsersEvents.objects.create(user=user1, achievement=ach2)
+        UsersPosts.objects.create(user=user1, achievement=ach1)
+        UsersPosts.objects.create(user=user1, achievement=ach2)
         url1 = self.URL.format(id=user1.pk)
         url2 = self.URL.format(id=user2.pk)
 
@@ -61,7 +61,7 @@ class TestFeedAPIView(APITestCase):
     def test_search(self):
         user1 = User.objects.create(name='name1', surname='surname1')
         ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
-        UsersEvents.objects.create(user=user1, achievement=ach1)
+        UsersPosts.objects.create(user=user1, achievement=ach1)
         Ad.objects.create(title='tad1', description='td1', url='urlone.com')
         Note.objects.create(title='tn1', body='b', user=user1)
         url = self.URL.format(id=user1.pk)
@@ -81,7 +81,7 @@ class TestFeedAPIView(APITestCase):
     def test_filter(self):
         user1 = User.objects.create(name='name1', surname='surname1')
         ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
-        UsersEvents.objects.create(user=user1, achievement=ach1)
+        UsersPosts.objects.create(user=user1, achievement=ach1)
         Ad.objects.create(title='tad1', description='td1', url='urlone.com')
         Note.objects.create(title='tn1', body='b', user=user1)
         url = self.URL.format(id=user1.pk)
@@ -102,8 +102,8 @@ class TestFeedAPIView(APITestCase):
         user1 = User.objects.create(name='name1', surname='surname1')
         ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
         ach2 = Achievement.objects.create(title='ta2', reasons='tr2')
-        UsersEvents.objects.create(user=user1, achievement=ach1)
-        UsersEvents.objects.create(user=user1, achievement=ach2)
+        UsersPosts.objects.create(user=user1, achievement=ach1)
+        UsersPosts.objects.create(user=user1, achievement=ach2)
         Ad.objects.create(title='tad1', description='td1', url='urlone.com')
         Ad.objects.create(title='tad2', description='td2', url='urlone.com')
         Note.objects.create(title='tn1', body='b', user=user1)
