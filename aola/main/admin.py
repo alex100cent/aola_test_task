@@ -5,7 +5,7 @@ from .models import User, Ad, Achievement, Note, UsersPosts
 
 class UsersPostsAdmin(admin.ModelAdmin):
     model = UsersPosts
-    list_display = ('user', 'post', 'created_at')
+    list_display = ('users', 'posts', 'created_at')
 
 
 admin.site.register(User)
