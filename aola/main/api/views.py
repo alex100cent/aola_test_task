@@ -1,11 +1,19 @@
+from random import choices
+
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
 
+from .exceptions import InvalidFilterKeyword
 from .paginations import FeedPaginator
-from .serializers import AchievementSerializer, NoteSerializer, AdSerializer
-from ..constants import FilterKeyWords
-from ..models import Achievement, Note, Ad
+from .serializers import AdSerializer, PostSerializer
+from ..models import Ad, User, Achievement, Note
+
+POST_KEYWORDS = {
+    'achievement': Achievement,
+    'note': Note,
+    'ad': Ad
+}
 
 
 class FeedAPIView(GenericAPIView):
@@ -14,25 +22,27 @@ class FeedAPIView(GenericAPIView):
     search_fields = ('title',)
 
     def get(self, request, user_id):
-        ad = Ad.objects.all()
-        result_dict = {
-            'ad': AdSerializer(ad, many=True).data
-        }
+        user = get_object_or_404(User, pk=user_id)
 
         filter_param = self.request.query_params.get('filter')
-        if not filter_param or (filter_param == FilterKeyWords.NOTE):
-            notes = Note.objects.filter(user__pk=user_id)
-            notes = self.filter_queryset(notes)
-            result_dict['notes'] = NoteSerializer(notes, many=True).data
-        if not filter_param or (filter_param == FilterKeyWords.ACHIEVEMENT):
-            achievements = Achievement.objects.filter(usersachievements__user__pk=user_id)
-            achievements = self.filter_queryset(achievements)
-            result_dict['achievements'] = AchievementSerializer(achievements, many=True).data
+        if filter_param:
+            if filter_param in POST_KEYWORDS:
+                user_posts = user.posts.instance_of(POST_KEYWORDS[filter_param])
+            else:
+                raise InvalidFilterKeyword(f"Received an invalid filter keyword: {filter_param}")
+        else:
+            user_posts = user.posts.all()
 
-        result_data = result_dict.pop('ad')
-        for key in result_dict:
-            result_data += result_dict[key]
+        user_posts = self.filter_queryset(user_posts)
+        user_posts = PostSerializer(user_posts, many=True).data
+        user_posts = self.paginate_queryset(user_posts)
 
-        result_data = self.paginate_queryset(result_data)
+        ad = Ad.objects.all()
+        if len(ad) > 0:
+            ad = choices(ad, k=1)
+            ad = AdSerializer(ad, many=True).data
+            result = ad + user_posts
+        else:
+            result = user_posts
 
-        return Response(result_data)
+        return Response(result)

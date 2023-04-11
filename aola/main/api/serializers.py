@@ -1,48 +1,31 @@
 from rest_framework import serializers
 
-from ..models import User, UsersAchievements, Achievement, Note, Ad
+from ..models import UsersPosts, Ad, Post
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
-
-
-class UsersAchievementsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UsersAchievements
-        fields = '__all__'
-
-
-class AchievementSerializer(serializers.ModelSerializer):
-    content_type = serializers.SerializerMethodField()
+class PostSerializer(serializers.ModelSerializer):
+    post_type = serializers.SerializerMethodField()
 
     class Meta:
-        model = Achievement
+        model = Post
         fields = '__all__'
 
-    def get_content_type(self, *args, **kwargs):
-        return 'achievement'
+    def get_post_type(self, obj, *args, **kwargs):
+        return obj.POST_TYPE
 
 
-class NoteSerializer(serializers.ModelSerializer):
-    content_type = serializers.SerializerMethodField()
-
+class UsersPostsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Note
+        model = UsersPosts
         fields = '__all__'
-
-    def get_content_type(self, *args, **kwargs):
-        return 'note'
 
 
 class AdSerializer(serializers.ModelSerializer):
-    content_type = serializers.SerializerMethodField()
+    post_type = serializers.SerializerMethodField()
 
     class Meta:
         model = Ad
         fields = '__all__'
 
-    def get_content_type(self, *args, **kwargs):
-        return 'ad'
+    def get_post_type(self, obj, *args, **kwargs):
+        return obj.POST_TYPE

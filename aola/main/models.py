@@ -1,19 +1,51 @@
 from django.db import models
+from polymorphic.models import PolymorphicModel
 
 
 class User(models.Model):
     name = models.CharField(max_length=100)
     surname = models.CharField(max_length=100)
+    posts = models.ManyToManyField(
+        'Post',
+        related_name='users',
+        through='UsersPosts',
+    )
 
     def __str__(self):
         return f"{self.name} {self.surname}"
 
 
-class Note(models.Model):
+class Post(PolymorphicModel):
     title = models.CharField(max_length=100)
-    body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Note(Post):
+    POST_TYPE = 'note'
+    body = models.TextField()
+
+    def __str__(self):
+        return f"{self.title}"
+
+
+class Achievement(Post):
+    POST_TYPE = 'achievement'
+    body = models.TextField()
+
+    def __str__(self):
+        return f"{self.title}"
+
+
+class Ad(models.Model):
+    POST_TYPE = 'ad'
+
+    title = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    body = models.TextField()
+    url = models.URLField()
 
     def __str__(self):
         return f"{self.title}"
@@ -22,37 +54,10 @@ class Note(models.Model):
         ordering = ['-created_at']
 
 
-class Achievement(models.Model):
-    title = models.CharField(max_length=100)
-    reasons = models.TextField()
-    icon = models.ImageField(blank=True, upload_to='images/achievements/%Y/%m/%d')
-    owners = models.ManyToManyField(User, through='UsersAchievements')
-
-    def __str__(self):
-        return f"{self.title}"
-
-
-class UsersAchievements(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
-    received_at = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    def __str__(self):
-        return f"{self.user.name} {self.achievement.name}"
+class UsersPosts(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    users = models.ForeignKey(User, models.CASCADE)
+    posts = models.ForeignKey(Post, models.CASCADE)
 
     class Meta:
-        ordering = ['-received_at']
-
-
-class Ad(models.Model):
-    title = models.CharField(max_length=100)
-    description = models.TextField()
-    image = models.ImageField(blank=True, upload_to='images/ad/%Y/%m/%d')
-    url = models.URLField()
-    published_at = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    def __str__(self):
-        return f"{self.title}"
-
-    class Meta:
-        ordering = ['-published_at']
+        ordering = ['-created_at']

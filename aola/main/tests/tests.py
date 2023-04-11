@@ -1,122 +1,129 @@
-from rest_framework import status
-from rest_framework.test import APITestCase
+import pytest
 
 from ..constants import FilterKeyWords
-from ..models import Achievement, Ad, UsersAchievements, Note, User
+from ..models import Achievement, Ad, UsersPosts, Note, User
+
+URL = '/feed/{id}/'
 
 
-class TestFeedAPIView(APITestCase):
-    URL = '/feed/{id}/'
+@pytest.mark.django_db
+def test_notes(client):
+    user = User.objects.create(name='name1', surname='surname1')
+    n1 = Note.objects.create(title='tn1', body='b')
+    n2 = Note.objects.create(title='tn2', body='b')
+    UsersPosts.objects.create(users=user, posts=n1)
+    UsersPosts.objects.create(users=user, posts=n2)
+    url = URL.format(id=user.pk)
 
-    def test_notes(self):
-        user1 = User.objects.create(name='name1', surname='surname1')
-        user2 = User.objects.create(name='name2', surname='surname2')
-        Note.objects.create(title='tn1', body='b', user=user1)
-        Note.objects.create(title='tn2', body='b', user=user1)
-        Note.objects.create(title='tn3', body='b', user=user2)
-        url1 = self.URL.format(id=user1.pk)
-        url2 = self.URL.format(id=user2.pk)
+    response = client.get(url)
 
-        response1 = self.client.get(url1)
-        response2 = self.client.get(url2)
+    assert response.status_code == 200
+    assert response.data[0]['post_type'] == 'note'
+    assert len(response.data) == 2
 
-        self.assertEqual(status.HTTP_200_OK, response1.status_code)
-        self.assertEqual(status.HTTP_200_OK, response2.status_code)
-        self.assertEqual(response1.data[0]['content_type'], 'note')
-        self.assertEqual(response2.data[0]['content_type'], 'note')
-        self.assertEqual(len(response1.data), 2)
-        self.assertEqual(len(response2.data), 1)
 
-    def test_ad(self):
-        user1 = User.objects.create(name='name1', surname='surname1')
-        Ad.objects.create(title='tad1', description='td1', url='urlone.com')
-        Ad.objects.create(title='tad2', description='td1', url='urlone.com')
-        url1 = self.URL.format(id=user1.pk)
+@pytest.mark.django_db
+def test_achievement(client):
+    user = User.objects.create(name='name1', surname='surname1')
+    a1 = Achievement.objects.create(title='a1', body='b')
+    a2 = Achievement.objects.create(title='a2', body='b')
+    UsersPosts.objects.create(users=user, posts=a1)
+    UsersPosts.objects.create(users=user, posts=a2)
+    url = URL.format(id=user.pk)
 
-        response1 = self.client.get(url1)
+    response = client.get(url)
 
-        self.assertEqual(status.HTTP_200_OK, response1.status_code)
-        self.assertEqual(response1.data[0]['content_type'], 'ad')
-        self.assertEqual(len(response1.data), 2)
+    assert response.status_code == 200
+    assert response.data[0]['post_type'] == 'achievement'
+    assert len(response.data) == 2
 
-    def test_achievements(self):
-        user1 = User.objects.create(name='name1', surname='surname1')
-        user2 = User.objects.create(name='name2', surname='surname2')
-        ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
-        ach2 = Achievement.objects.create(title='ta2', reasons='tr2')
-        UsersAchievements.objects.create(user=user1, achievement=ach1)
-        UsersAchievements.objects.create(user=user1, achievement=ach2)
-        url1 = self.URL.format(id=user1.pk)
-        url2 = self.URL.format(id=user2.pk)
 
-        response1 = self.client.get(url1)
-        response2 = self.client.get(url2)
+@pytest.mark.django_db
+def test_ad(client):
+    user = User.objects.create(name='name1', surname='surname1')
+    Ad.objects.create(title='ad1', body='b', url='test.url')
+    url = URL.format(id=user.pk)
 
-        self.assertEqual(status.HTTP_200_OK, response1.status_code)
-        self.assertEqual(status.HTTP_200_OK, response2.status_code)
-        self.assertEqual(response1.data[0]['content_type'], 'achievement')
-        self.assertEqual(len(response1.data), 2)
-        self.assertEqual(len(response2.data), 0)
+    response = client.get(url)
 
-    def test_search(self):
-        user1 = User.objects.create(name='name1', surname='surname1')
-        ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
-        UsersAchievements.objects.create(user=user1, achievement=ach1)
-        Ad.objects.create(title='tad1', description='td1', url='urlone.com')
-        Note.objects.create(title='tn1', body='b', user=user1)
-        url = self.URL.format(id=user1.pk)
+    assert response.status_code == 200
+    assert response.data[0]['post_type'] == 'ad'
 
-        response_note = self.client.get(f"{url}?search=tn1")
-        response_ach = self.client.get(f"{url}?search=ta1")
 
-        self.assertEqual(status.HTTP_200_OK, response_note.status_code)
-        self.assertEqual(status.HTTP_200_OK, response_ach.status_code)
-        self.assertEqual(len(response_note.data), 2)
-        self.assertEqual(response_note.data[0]['content_type'], 'ad')
-        self.assertEqual(response_note.data[1]['content_type'], 'note')
-        self.assertEqual(len(response_ach.data), 2)
-        self.assertEqual(response_ach.data[0]['content_type'], 'ad')
-        self.assertEqual(response_ach.data[1]['content_type'], 'achievement')
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ('search_param', 'search_result'),
+    [
+        pytest.param('tn1', 'tn1'),
+        pytest.param('a1', 'a1')
+    ])
+def test_search(search_param, search_result, client):
+    user = User.objects.create(name='name1', surname='surname1')
+    n1 = Note.objects.create(title='tn1', body='b')
+    a1 = Achievement.objects.create(title='a1', body='b')
+    UsersPosts.objects.create(users=user, posts=n1)
+    UsersPosts.objects.create(users=user, posts=a1)
+    url = URL.format(id=user.pk)
 
-    def test_filter(self):
-        user1 = User.objects.create(name='name1', surname='surname1')
-        ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
-        UsersAchievements.objects.create(user=user1, achievement=ach1)
-        Ad.objects.create(title='tad1', description='td1', url='urlone.com')
-        Note.objects.create(title='tn1', body='b', user=user1)
-        url = self.URL.format(id=user1.pk)
+    response = client.get(url, data={'search': search_param})
 
-        response_note = self.client.get(f"{url}?filter={FilterKeyWords.NOTE}")
-        response_ach = self.client.get(f"{url}?filter={FilterKeyWords.ACHIEVEMENT}")
+    assert response.status_code == 200
+    assert response.data[0]['title'] == search_result
 
-        self.assertEqual(status.HTTP_200_OK, response_note.status_code)
-        self.assertEqual(status.HTTP_200_OK, response_ach.status_code)
-        self.assertEqual(len(response_note.data), 2)
-        self.assertEqual(response_note.data[0]['content_type'], 'ad')
-        self.assertEqual(response_note.data[1]['content_type'], 'note')
-        self.assertEqual(len(response_ach.data), 2)
-        self.assertEqual(response_ach.data[0]['content_type'], 'ad')
-        self.assertEqual(response_ach.data[1]['content_type'], 'achievement')
 
-    def test_pagination(self):
-        user1 = User.objects.create(name='name1', surname='surname1')
-        ach1 = Achievement.objects.create(title='ta1', reasons='tr1')
-        ach2 = Achievement.objects.create(title='ta2', reasons='tr2')
-        UsersAchievements.objects.create(user=user1, achievement=ach1)
-        UsersAchievements.objects.create(user=user1, achievement=ach2)
-        Ad.objects.create(title='tad1', description='td1', url='urlone.com')
-        Ad.objects.create(title='tad2', description='td2', url='urlone.com')
-        Note.objects.create(title='tn1', body='b', user=user1)
-        Note.objects.create(title='tn2', body='b', user=user1)
-        url = self.URL.format(id=user1.pk)
+@pytest.mark.django_db
+@pytest.mark.parametrize(('filter_param'), [
+    pytest.param(FilterKeyWords.NOTE),
+    pytest.param(FilterKeyWords.ACHIEVEMENT),
+])
+def test_filter(filter_param, client):
+    user = User.objects.create(name='name1', surname='surname1')
+    for _ in range(3):
+        note = Note.objects.create(title='tn', body='b')
+        achievement = Achievement.objects.create(title='a', body='b')
+        UsersPosts.objects.create(users=user, posts=note)
+        UsersPosts.objects.create(users=user, posts=achievement)
+    url = URL.format(id=user.pk)
 
-        response1 = self.client.get(url)
-        response2 = self.client.get(f"{url}?offset=2")
-        response3 = self.client.get(f"{url}?limit=10")
+    response = client.get(url, data={'filter': filter_param})
 
-        self.assertEqual(status.HTTP_200_OK, response1.status_code)
-        self.assertEqual(status.HTTP_200_OK, response2.status_code)
-        self.assertEqual(status.HTTP_200_OK, response3.status_code)
-        self.assertEqual(len(response1.data), 2)
-        self.assertEqual(len(response2.data), 2)
-        self.assertEqual(len(response3.data), 6)
+    assert response.status_code == 200
+    for i in range(len(response.data)):
+        assert response.data[i]['post_type'] == filter_param
+
+
+@pytest.mark.django_db
+def test_filter_error(client):
+    user = User.objects.create(name='name1', surname='surname1')
+    for _ in range(3):
+        note = Note.objects.create(title='tn', body='b')
+        achievement = Achievement.objects.create(title='a', body='b')
+        UsersPosts.objects.create(users=user, posts=note)
+        UsersPosts.objects.create(users=user, posts=achievement)
+    url = URL.format(id=user.pk)
+
+    response = client.get(url, data={'filter': "wrong_param"})
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(('limit', 'offset', 'data_len'), [
+    pytest.param(1, 0, 1),
+    pytest.param(1, 0, 1),
+    pytest.param(5, 0, 5),
+    pytest.param(2, 1, 2),
+])
+def test_pagination(limit, offset, data_len, client):
+    user = User.objects.create(name='name1', surname='surname1')
+    for _ in range(3):
+        note = Note.objects.create(title='tn', body='b')
+        achievement = Achievement.objects.create(title='a', body='b')
+        UsersPosts.objects.create(users=user, posts=note)
+        UsersPosts.objects.create(users=user, posts=achievement)
+    url = URL.format(id=user.pk)
+
+    response = client.get(url, data={'limit': limit, 'offset': offset})
+
+    assert response.status_code == 200
+    assert len(response.data) == data_len
