@@ -7,7 +7,7 @@ docker-compose up -d --build
 
 #### 2 Run the tests
 ```shell
-docker-compose exec web python3 manage.py test main.tests
+docker-compose exec web pytest
 ```
 
 #### 3 Import requests from 'postman_collection.json' to make requests using Postman

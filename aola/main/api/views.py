@@ -23,8 +23,6 @@ class FeedAPIView(GenericAPIView):
 
     def get(self, request, user_id):
         user = get_object_or_404(User, pk=user_id)
-        ad = choices(Ad.objects.all(), k=1)
-        ad = AdSerializer(ad, many=True).data
 
         filter_param = self.request.query_params.get('filter')
         if filter_param:
@@ -36,9 +34,15 @@ class FeedAPIView(GenericAPIView):
             user_posts = user.posts.all()
 
         user_posts = self.filter_queryset(user_posts)
-
         user_posts = PostSerializer(user_posts, many=True).data
         user_posts = self.paginate_queryset(user_posts)
-        result = ad + user_posts
+
+        ad = Ad.objects.all()
+        if len(ad) > 0:
+            ad = choices(ad, k=1)
+            ad = AdSerializer(ad, many=True).data
+            result = ad + user_posts
+        else:
+            result = user_posts
 
         return Response(result)
