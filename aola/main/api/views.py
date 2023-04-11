@@ -4,6 +4,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.response import Response
 
+from .exceptions import InvalidFilterKeyword
 from .paginations import FeedPaginator
 from .serializers import AdSerializer, PostSerializer
 from ..models import Ad, User, Achievement, Note
@@ -30,7 +31,7 @@ class FeedAPIView(GenericAPIView):
             if filter_param in POST_KEYWORDS:
                 user_posts = user.posts.instance_of(POST_KEYWORDS[filter_param])
             else:
-                user_posts = []
+                raise InvalidFilterKeyword(f"Received an invalid filter keyword: {filter_param}")
         else:
             user_posts = user.posts.all()
 
