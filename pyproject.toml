@@ -14,6 +14,7 @@ pillow = "^9.4.0"
 psycopg2-binary = "^2.9.5"
 django-polymorphic = "^3.1.0"
 pytest-django = "^4.5.2"
+pytest-factoryboy = "^2.5.1"
 
 
 [build-system]
