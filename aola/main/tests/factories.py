@@ -5,6 +5,9 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = 'main.User'
 
+    name = factory.Faker('first_name')
+    surname = factory.Faker('last_name')
+
 
 class AdFactory(factory.django.DjangoModelFactory):
     class Meta:
