@@ -1,9 +1,12 @@
 import pytest
+from pytest_factoryboy import register
 
+from .factories import UserFactory, AdFactory, AchievementFactory, NoteFactory, UsersPostsFactory
 from ..constants import FilterKeyWords
 from ..models import Achievement, Ad, Note
 
 URL = '/feed/{id}/'
+register(UserFactory, "user", name='name1', surname='surname1')
 
 
 @pytest.mark.django_db
